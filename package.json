@@ -1,0 +1,14 @@
+{
+  "name": "youtube-rss-node",
+  "version": "1.0.0",
+  "description": "Custom YouTube RSS feed with thumbnails and embeds",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "axios": "^1.7.3",
+    "xmlbuilder2": "^4.0.2"
+  }
+}
