@@ -1,6 +1,7 @@
 import express from "express";
 import fetch from "node-fetch";
-import { parse } from "fast-xml-parser";
+import pkg from "fast-xml-parser";
+const { parse } = pkg;
 import { create } from "xmlbuilder2";
 
 const app = express();
