@@ -9,12 +9,33 @@ const cache = new Map();
 const CACHE_DURATION = 60 * 60 * 1000; // 1小时缓存
 
 app.get("/", (req, res) => {
-  res.send("✅ YouTube RSS Proxy is running. Use /api/rss?channel_id=...");
+  res.send("✅ YouTube RSS Proxy is running. Use /api/rss?channel_id=... or /api/rss?username=...");
 });
 
+async function getChannelId(username) {
+  // 根据 @用户名 获取 UC... 频道 ID
+  try {
+    const res = await fetch(`https://www.youtube.com/@${username}`);
+    const html = await res.text();
+    const match = html.match(/"channelId":"(UC[\w-]{22})"/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
 app.get("/api/rss", async (req, res) => {
-  const channelId = req.query.channel_id;
-  if (!channelId) return res.status(400).send("❌ Missing channel_id parameter");
+  let channelId = req.query.channel_id;
+  const username = req.query.username;
+
+  if (!channelId && !username) {
+    return res.status(400).send("❌ Missing channel_id or username parameter");
+  }
+
+  if (!channelId && username) {
+    channelId = await getChannelId(username);
+    if (!channelId) return res.status(404).send("❌ Cannot find channelId for this username");
+  }
 
   const cached = cache.get(channelId);
   const now = Date.now();
@@ -45,6 +66,7 @@ app.get("/api/rss", async (req, res) => {
       const item = rss.ele("item");
       item.ele("title").txt(video.title).up();
       item.ele("link").txt(video.link["@_href"]).up();
+      item.ele("guid").txt(videoId).up();
       item.ele("pubDate").txt(new Date(video.published).toUTCString()).up();
       item.ele("description").dat(video["media:group"]["media:description"]).up();
       item.ele("media:thumbnail", { url: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` }).up();
