@@ -9,6 +9,9 @@
   "dependencies": {
     "express": "^4.19.2",
     "axios": "^1.7.3",
-    "xmlbuilder2": "^4.0.2"
+    "xmlbuilder2": "3.0.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
