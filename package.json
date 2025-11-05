@@ -1,8 +1,8 @@
 {
   "name": "youtube-rss-node",
   "version": "1.0.0",
-  "description": "Custom YouTube RSS feed with thumbnails and embeds",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
   },
