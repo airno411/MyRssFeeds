@@ -38,7 +38,10 @@ app.get("/api/rss", async (req, res) => {
     const feed = parsed.feed;
 
     const rss = create({ version: "1.0", encoding: "UTF-8" })
-      .ele("rss", { version: "2.0" })
+      .ele("rss", { 
+        version: "2.0",
+        "xmlns:media": "http://search.yahoo.com/mrss/"
+      })
       .ele("channel")
       .ele("title").txt(feed.title).up()
       .ele("link").txt(`https://www.youtube.com/channel/${channelId}`).up()
@@ -53,6 +56,11 @@ app.get("/api/rss", async (req, res) => {
       item.ele("guid").txt(videoId).up();
       item.ele("pubDate").txt(new Date(video.published).toUTCString()).up();
       item.ele("description").dat(video["media:group"]["media:description"]).up();
+      // Add thumbnail if available
+      const thumbnail = video["media:group"]["media:thumbnail"];
+      if (thumbnail && thumbnail["@_url"]) {
+        item.ele("media:thumbnail", { url: thumbnail["@_url"] }).up();
+      }
       item.up();
     });
 
