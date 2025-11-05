@@ -1,41 +1,19 @@
 import express from "express";
 import fetch from "node-fetch";
 import { create } from "xmlbuilder2";
-import pkg from "fast-xml-parser";
-const { parse } = pkg;
+import parser from "fast-xml-parser";
 
 const app = express();
 const cache = new Map();
-const CACHE_DURATION = 60 * 60 * 1000; // 1小时缓存
+const CACHE_DURATION = 60 * 60 * 1000;
 
 app.get("/", (req, res) => {
-  res.send("✅ YouTube RSS Proxy is running. Use /api/rss?channel_id=... or /api/rss?username=...");
+  res.send("✅ YouTube RSS Proxy is running. Use /api/rss?channel_id=...");
 });
 
-async function getChannelId(username) {
-  // 根据 @用户名 获取 UC... 频道 ID
-  try {
-    const res = await fetch(`https://www.youtube.com/@${username}`);
-    const html = await res.text();
-    const match = html.match(/"channelId":"(UC[\w-]{22})"/);
-    return match ? match[1] : null;
-  } catch {
-    return null;
-  }
-}
-
 app.get("/api/rss", async (req, res) => {
-  let channelId = req.query.channel_id;
-  const username = req.query.username;
-
-  if (!channelId && !username) {
-    return res.status(400).send("❌ Missing channel_id or username parameter");
-  }
-
-  if (!channelId && username) {
-    channelId = await getChannelId(username);
-    if (!channelId) return res.status(404).send("❌ Cannot find channelId for this username");
-  }
+  const channelId = req.query.channel_id;
+  if (!channelId) return res.status(400).send("❌ Missing channel_id parameter");
 
   const cached = cache.get(channelId);
   const now = Date.now();
@@ -50,11 +28,11 @@ app.get("/api/rss", async (req, res) => {
     if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
 
     const text = await response.text();
-    const parsed = parse(text, { ignoreAttributes: false });
+    const parsed = parser.parse(text, { ignoreAttributes: false });
     const feed = parsed.feed;
 
     const rss = create({ version: "1.0", encoding: "UTF-8" })
-      .ele("rss", { version: "2.0", "xmlns:media": "http://search.yahoo.com/mrss/" })
+      .ele("rss", { version: "2.0" })
       .ele("channel")
       .ele("title").txt(feed.title).up()
       .ele("link").txt(`https://www.youtube.com/channel/${channelId}`).up()
@@ -69,7 +47,6 @@ app.get("/api/rss", async (req, res) => {
       item.ele("guid").txt(videoId).up();
       item.ele("pubDate").txt(new Date(video.published).toUTCString()).up();
       item.ele("description").dat(video["media:group"]["media:description"]).up();
-      item.ele("media:thumbnail", { url: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` }).up();
       item.up();
     });
 
