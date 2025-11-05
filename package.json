@@ -9,7 +9,8 @@
   "dependencies": {
     "express": "^4.19.2",
     "axios": "^1.7.3",
-    "xmlbuilder2": "3.0.2"
+    "xmlbuilder2": "^3.0.2",
+    "node-fetch": "^3.3.2"
   },
   "engines": {
     "node": ">=18"
