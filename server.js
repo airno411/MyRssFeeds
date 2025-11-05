@@ -1,7 +1,12 @@
 import express from "express";
 import fetch from "node-fetch";
 import { create } from "xmlbuilder2";
-import parser from "fast-xml-parser";
+import { XMLParser } from "fast-xml-parser";
+
+// fast-xml-parser v4 exports XMLParser class. Instantiate once with
+// options (keep attributeNamePrefix to "@_" so existing code that
+// references "@_href" continues to work).
+const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
 
 const app = express();
 const cache = new Map();
@@ -28,7 +33,8 @@ app.get("/api/rss", async (req, res) => {
     if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
 
     const text = await response.text();
-    const parsed = parser.parse(text, { ignoreAttributes: false });
+  // parse() no longer takes options in v4; options are passed to the constructor
+  const parsed = parser.parse(text);
     const feed = parsed.feed;
 
     const rss = create({ version: "1.0", encoding: "UTF-8" })
